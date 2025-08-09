@@ -47,15 +47,14 @@ impl HTTPRequest {
     }
 
     fn create_response(code: HTTPStatusCode, contents: &str) -> String {
-        //     let status_line = "HTTP/1.1 200 OK";
-        //     let contents = fs::read_to_string("index.html").unwrap();
-        //     let length = contents.len();
-        //     let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+        let code_value = code.to_value();
+        let status_line = format!("HTTP/1.1 {code_value} {code}");
 
-        let code_string = code.to_string();
-        let status_line = format!("HTTP/1.1 {code} {code_string}");
+        let length = contents.len();
 
-        println!("{}", status_line);
+        let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+
+        response
     }
 
     fn parse_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
@@ -90,8 +89,6 @@ impl HTTPRequest {
                 ));
             } else {
                 let split = line_str.split_once(":").unwrap();
-
-                println!("{split:#?}");
 
                 let key = split.0;
                 let value = split.1.trim();
@@ -150,9 +147,19 @@ struct HTTPMethodParseError {
 
 enum HTTPStatusCode {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
-    Ok = 200,
-    NotFound = 404,
-    InternalServerError = 500,
+    Ok,
+    NotFound,
+    InternalServerError,
+}
+
+impl HTTPStatusCode {
+    fn to_value(&self) -> u32 {
+        match self {
+            HTTPStatusCode::Ok => 200,
+            HTTPStatusCode::NotFound => 404,
+            HTTPStatusCode::InternalServerError => 500,
+        }
+    }
 }
 
 impl fmt::Display for HTTPStatusCode {
@@ -188,14 +195,24 @@ fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&stream);
     let request = HTTPRequest::parse_buf_reader(buf_reader);
 
-    match request {
-        Ok(r) => {}
-        Err(e) => stream.write_all(),
-    }
+    let response = match request {
+        Ok(r) => {
+            let contents = match &r.get_file() {
+                Ok(file) => match file {
+                    Ok(string) => string,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        return;
+                    }
+                },
+                Err(_) => return,
+            };
 
-    // let request_line = &request[0];
+            HTTPRequest::create_response(HTTPStatusCode::Ok, contents)
+        }
 
-    // if request_line == "GET / HTTP/1.1" {
+        Err(_) => todo!(),
+    };
 
-    //     stream.write_all(response.as_bytes()).unwrap();
+    stream.write_all(response.as_bytes()).unwrap()
 }
