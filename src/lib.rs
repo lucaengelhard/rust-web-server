@@ -53,3 +53,27 @@ pub enum HTTPMethod {
     TRACE,
     PATCH,
 }
+
+pub enum HTTPStatusCode {
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+    Informal(InformalCode),
+    Success(SuccessCode),
+    Redirection(RedirectionCode),
+    ClientError(ClientErrorCode),
+    ServerError(ServerErrorCode),
+}
+
+enum InformalCode {
+    Continue,
+    SwitchingProtocols,
+    Processing,
+    EarlyHints,
+}
+
+enum SuccessCode {}
+
+enum RedirectionCode {}
+
+enum ClientErrorCode {}
+
+enum ServerErrorCode {}
