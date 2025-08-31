@@ -139,7 +139,7 @@ pub enum ServerErrorCode {
 }
 
 impl HTTPStatusCode {
-    fn to_value(&self) -> u8 {
+    pub fn to_value(&self) -> u8 {
         todo!()
     }
 }
@@ -223,15 +223,15 @@ impl fmt::Display for HTTPStatusCode {
 }
 
 pub struct HTTPRequest {
-    method: HTTPMethod,
-    path: PathBuf,
-    version: String,
-    headers: HashMap<String, String>,
+    pub method: HTTPMethod,
+    pub path: PathBuf,
+    pub version: String,
+    pub headers: HashMap<String, String>,
     // body: Option<String>,
 }
 
 impl HTTPRequest {
-    fn get_file(&self) -> Result<String, HTTPStatusCode> {
+    pub fn get_file(&self) -> Result<String, HTTPStatusCode> {
         let path = PathBuf::from(match self.path.to_str() {
             Some(str) => match str {
                 "/" => "index.html",
@@ -254,7 +254,7 @@ impl HTTPRequest {
         // todo!("path checking and sanitization");
     }
 
-    fn from_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
+    pub fn from_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
         let lines = buf_reader.lines();
 
         let mut request: Option<HTTPRequest> = None;
@@ -312,13 +312,13 @@ impl HTTPRequest {
 }
 
 pub struct HTTPResponse {
-    status: HTTPStatusCode,
-    version: String,
-    contents: Option<String>,
+    pub status: HTTPStatusCode,
+    pub version: String,
+    pub contents: Option<String>,
 }
 
 impl HTTPResponse {
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         let version = &self.version;
         let status_code = self.status.to_value();
         let status_message = &self.status;
