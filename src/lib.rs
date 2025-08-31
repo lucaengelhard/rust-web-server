@@ -63,17 +63,78 @@ pub enum HTTPStatusCode {
     ServerError(ServerErrorCode),
 }
 
-enum InformalCode {
-    Continue,
+pub enum InformalCode {
+    Continue = 100,
     SwitchingProtocols,
     Processing,
     EarlyHints,
 }
 
-enum SuccessCode {}
+pub enum SuccessCode {
+    OK = 200,
+    Created,
+    Accepted,
+    NonAuthorativeInformation,
+    NoContent,
+    ResetContent,
+    PartialContent,
+    MultiStatus,
+    AlreadyReported,
+    IMUsed = 226,
+}
 
-enum RedirectionCode {}
+pub enum RedirectionCode {
+    MultipleChoices = 300,
+    MovedPermanently,
+    Found,
+    SeeOther,
+    NotModified,
+    UseProxy,
+    TemporaryRedirect = 308,
+}
 
-enum ClientErrorCode {}
+pub enum ClientErrorCode {
+    BadRequest = 400,
+    Unauthorized,
+    PaymentRequired,
+    Forbidden,
+    NotFound,
+    MethodNotAllowed,
+    NotAcceptable,
+    ProxyAuthenticationRequired,
+    RequestTimeout,
+    Conflict,
+    Gone,
+    LengthRequired,
+    PreconditionFailed,
+    ContentTooLarge,
+    URITooLong,
+    UnsupportedMediaType,
+    RangeNotSatisfiable,
+    ExpectationFailed,
+    ImATeapot,
+    MisdirectedRequest = 421,
+    UnprocessableContent,
+    Locked,
+    FailedDependency,
+    TooEarly,
+    UpgradeRequired,
+    PreconditionRequired = 428,
+    TooManyRequests,
+    RequestHeaderFieldsTooLarge = 430,
+    UnavailableForLegalReasons = 451,
+}
 
-enum ServerErrorCode {}
+pub enum ServerErrorCode {
+    InternalServerError = 500,
+    NotImplemented,
+    BadGateway,
+    ServiceUnavailable,
+    GatewayTimeout,
+    HTTPVersionNotSupported,
+    VariantAlsoNegotiates,
+    InsufficientStorage,
+    LoopDetected,
+    NotExtended = 510,
+    NetworkAuthenticationRequired,
+}
