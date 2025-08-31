@@ -3,7 +3,7 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-use rust_web_server::{HTTPRequest, HTTPResponse, HTTPStatusCode};
+use rust_web_server::{ClientErrorCode, HTTPRequest, HTTPResponse, HTTPStatusCode};
 
 fn main() {
     let listener = match TcpListener::bind("127.0.0.1:7878") {

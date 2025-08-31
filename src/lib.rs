@@ -7,6 +7,7 @@ use std::{
     path::PathBuf,
 };
 
+#[derive(Debug)]
 pub enum HTTPMethod {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
     GET,
@@ -53,6 +54,7 @@ impl fmt::Display for HTTPMethod {
     }
 }
 
+#[derive(Debug)]
 pub enum HTTPStatusCode {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
     Informal(InformalCode),
@@ -62,6 +64,7 @@ pub enum HTTPStatusCode {
     ServerError(ServerErrorCode),
 }
 
+#[derive(Debug)]
 pub enum InformalCode {
     Continue,
     SwitchingProtocols,
@@ -69,6 +72,7 @@ pub enum InformalCode {
     EarlyHints,
 }
 
+#[derive(Debug)]
 pub enum SuccessCode {
     OK,
     Created,
@@ -82,6 +86,7 @@ pub enum SuccessCode {
     IMUsed,
 }
 
+#[derive(Debug)]
 pub enum RedirectionCode {
     MultipleChoices,
     MovedPermanently,
@@ -92,6 +97,7 @@ pub enum RedirectionCode {
     TemporaryRedirect,
 }
 
+#[derive(Debug)]
 pub enum ClientErrorCode {
     BadRequest,
     Unauthorized,
@@ -124,6 +130,7 @@ pub enum ClientErrorCode {
     UnavailableForLegalReasons,
 }
 
+#[derive(Debug)]
 pub enum ServerErrorCode {
     InternalServerError = 500,
     NotImplemented,
@@ -139,7 +146,7 @@ pub enum ServerErrorCode {
 }
 
 impl HTTPStatusCode {
-    pub fn to_value(&self) -> u8 {
+    pub fn to_value(&self) -> u16 {
         match self {
             HTTPStatusCode::Informal(code) => match code {
                 InformalCode::Continue => todo!(),
@@ -173,7 +180,7 @@ impl HTTPStatusCode {
                 ClientErrorCode::Unauthorized => todo!(),
                 ClientErrorCode::PaymentRequired => todo!(),
                 ClientErrorCode::Forbidden => todo!(),
-                ClientErrorCode::NotFound => todo!(),
+                ClientErrorCode::NotFound => 404,
                 ClientErrorCode::MethodNotAllowed => todo!(),
                 ClientErrorCode::NotAcceptable => todo!(),
                 ClientErrorCode::ProxyAuthenticationRequired => todo!(),
@@ -251,7 +258,7 @@ impl fmt::Display for HTTPStatusCode {
                 ClientErrorCode::Unauthorized => todo!(),
                 ClientErrorCode::PaymentRequired => todo!(),
                 ClientErrorCode::Forbidden => todo!(),
-                ClientErrorCode::NotFound => todo!(),
+                ClientErrorCode::NotFound => write!(f, "Not Found"),
                 ClientErrorCode::MethodNotAllowed => todo!(),
                 ClientErrorCode::NotAcceptable => todo!(),
                 ClientErrorCode::ProxyAuthenticationRequired => todo!(),
@@ -294,6 +301,7 @@ impl fmt::Display for HTTPStatusCode {
     }
 }
 
+#[derive(Debug)]
 pub struct HTTPRequest {
     pub method: HTTPMethod,
     pub path: PathBuf,
@@ -383,6 +391,7 @@ impl HTTPRequest {
     }
 }
 
+#[derive(Debug)]
 pub struct HTTPResponse {
     pub status: HTTPStatusCode,
     pub version: String,
@@ -394,7 +403,7 @@ impl HTTPResponse {
         let version = &self.version;
         let status_code = self.status.to_value();
         let status_message = &self.status;
-        let status_line = format!("{version} {status_code} {status_message}");
+        let status_line = format!("HTTP/{version} {status_code} {status_message}");
 
         let contents = match &self.contents {
             Some(c) => String::from(c),
