@@ -63,14 +63,14 @@ pub enum HTTPStatusCode {
 }
 
 pub enum InformalCode {
-    Continue = 100,
+    Continue,
     SwitchingProtocols,
     Processing,
     EarlyHints,
 }
 
 pub enum SuccessCode {
-    OK = 200,
+    OK,
     Created,
     Accepted,
     NonAuthorativeInformation,
@@ -79,21 +79,21 @@ pub enum SuccessCode {
     PartialContent,
     MultiStatus,
     AlreadyReported,
-    IMUsed = 226,
+    IMUsed,
 }
 
 pub enum RedirectionCode {
-    MultipleChoices = 300,
+    MultipleChoices,
     MovedPermanently,
     Found,
     SeeOther,
     NotModified,
     UseProxy,
-    TemporaryRedirect = 308,
+    TemporaryRedirect,
 }
 
 pub enum ClientErrorCode {
-    BadRequest = 400,
+    BadRequest,
     Unauthorized,
     PaymentRequired,
     Forbidden,
@@ -112,16 +112,16 @@ pub enum ClientErrorCode {
     RangeNotSatisfiable,
     ExpectationFailed,
     ImATeapot,
-    MisdirectedRequest = 421,
+    MisdirectedRequest,
     UnprocessableContent,
     Locked,
     FailedDependency,
     TooEarly,
     UpgradeRequired,
-    PreconditionRequired = 428,
+    PreconditionRequired,
     TooManyRequests,
-    RequestHeaderFieldsTooLarge = 430,
-    UnavailableForLegalReasons = 451,
+    RequestHeaderFieldsTooLarge,
+    UnavailableForLegalReasons,
 }
 
 pub enum ServerErrorCode {
@@ -134,13 +134,85 @@ pub enum ServerErrorCode {
     VariantAlsoNegotiates,
     InsufficientStorage,
     LoopDetected,
-    NotExtended = 510,
+    NotExtended,
     NetworkAuthenticationRequired,
 }
 
 impl HTTPStatusCode {
     pub fn to_value(&self) -> u8 {
-        todo!()
+        match self {
+            HTTPStatusCode::Informal(code) => match code {
+                InformalCode::Continue => todo!(),
+                InformalCode::SwitchingProtocols => todo!(),
+                InformalCode::Processing => todo!(),
+                InformalCode::EarlyHints => todo!(),
+            },
+            HTTPStatusCode::Success(code) => match code {
+                SuccessCode::OK => 200,
+                SuccessCode::Created => todo!(),
+                SuccessCode::Accepted => todo!(),
+                SuccessCode::NonAuthorativeInformation => todo!(),
+                SuccessCode::NoContent => todo!(),
+                SuccessCode::ResetContent => todo!(),
+                SuccessCode::PartialContent => todo!(),
+                SuccessCode::MultiStatus => todo!(),
+                SuccessCode::AlreadyReported => todo!(),
+                SuccessCode::IMUsed => todo!(),
+            },
+            HTTPStatusCode::Redirection(code) => match code {
+                RedirectionCode::MultipleChoices => todo!(),
+                RedirectionCode::MovedPermanently => todo!(),
+                RedirectionCode::Found => todo!(),
+                RedirectionCode::SeeOther => todo!(),
+                RedirectionCode::NotModified => todo!(),
+                RedirectionCode::UseProxy => todo!(),
+                RedirectionCode::TemporaryRedirect => todo!(),
+            },
+            HTTPStatusCode::ClientError(code) => match code {
+                ClientErrorCode::BadRequest => todo!(),
+                ClientErrorCode::Unauthorized => todo!(),
+                ClientErrorCode::PaymentRequired => todo!(),
+                ClientErrorCode::Forbidden => todo!(),
+                ClientErrorCode::NotFound => todo!(),
+                ClientErrorCode::MethodNotAllowed => todo!(),
+                ClientErrorCode::NotAcceptable => todo!(),
+                ClientErrorCode::ProxyAuthenticationRequired => todo!(),
+                ClientErrorCode::RequestTimeout => todo!(),
+                ClientErrorCode::Conflict => todo!(),
+                ClientErrorCode::Gone => todo!(),
+                ClientErrorCode::LengthRequired => todo!(),
+                ClientErrorCode::PreconditionFailed => todo!(),
+                ClientErrorCode::ContentTooLarge => todo!(),
+                ClientErrorCode::URITooLong => todo!(),
+                ClientErrorCode::UnsupportedMediaType => todo!(),
+                ClientErrorCode::RangeNotSatisfiable => todo!(),
+                ClientErrorCode::ExpectationFailed => todo!(),
+                ClientErrorCode::ImATeapot => todo!(),
+                ClientErrorCode::MisdirectedRequest => todo!(),
+                ClientErrorCode::UnprocessableContent => todo!(),
+                ClientErrorCode::Locked => todo!(),
+                ClientErrorCode::FailedDependency => todo!(),
+                ClientErrorCode::TooEarly => todo!(),
+                ClientErrorCode::UpgradeRequired => todo!(),
+                ClientErrorCode::PreconditionRequired => todo!(),
+                ClientErrorCode::TooManyRequests => todo!(),
+                ClientErrorCode::RequestHeaderFieldsTooLarge => todo!(),
+                ClientErrorCode::UnavailableForLegalReasons => todo!(),
+            },
+            HTTPStatusCode::ServerError(code) => match code {
+                ServerErrorCode::InternalServerError => todo!(),
+                ServerErrorCode::NotImplemented => todo!(),
+                ServerErrorCode::BadGateway => todo!(),
+                ServerErrorCode::ServiceUnavailable => todo!(),
+                ServerErrorCode::GatewayTimeout => todo!(),
+                ServerErrorCode::HTTPVersionNotSupported => todo!(),
+                ServerErrorCode::VariantAlsoNegotiates => todo!(),
+                ServerErrorCode::InsufficientStorage => todo!(),
+                ServerErrorCode::LoopDetected => todo!(),
+                ServerErrorCode::NotExtended => todo!(),
+                ServerErrorCode::NetworkAuthenticationRequired => todo!(),
+            },
+        }
     }
 }
 
@@ -154,7 +226,7 @@ impl fmt::Display for HTTPStatusCode {
                 InformalCode::EarlyHints => todo!(),
             },
             HTTPStatusCode::Success(code) => match code {
-                SuccessCode::OK => todo!(),
+                SuccessCode::OK => write!(f, "Ok"),
                 SuccessCode::Created => todo!(),
                 SuccessCode::Accepted => todo!(),
                 SuccessCode::NonAuthorativeInformation => todo!(),
