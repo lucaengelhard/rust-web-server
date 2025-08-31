@@ -1,10 +1,11 @@
+use core::str;
 use std::{
     collections::HashMap,
-    fmt,
+    fmt, fs,
     io::{BufRead, BufReader},
     net::TcpStream,
+    path::PathBuf,
 };
-use url::Url;
 
 pub enum HTTPMethod {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
@@ -223,13 +224,36 @@ impl fmt::Display for HTTPStatusCode {
 
 pub struct HTTPRequest {
     method: HTTPMethod,
-    path: String,
+    path: PathBuf,
     version: String,
     headers: HashMap<String, String>,
     // body: Option<String>,
 }
 
 impl HTTPRequest {
+    fn get_file(&self) -> Result<String, HTTPStatusCode> {
+        let path = PathBuf::from(match self.path.to_str() {
+            Some(str) => match str {
+                "/" => "index.html",
+                path_str => path_str,
+            },
+            None => todo!(),
+        });
+
+        if !path.exists() {
+            return Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound));
+        }
+
+        match fs::read_to_string(path) {
+            Ok(str) => Ok(str),
+            Err(_) => Err(HTTPStatusCode::ServerError(
+                ServerErrorCode::InternalServerError,
+            )),
+        }
+
+        // todo!("path checking and sanitization");
+    }
+
     fn from_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
         let lines = buf_reader.lines();
 
@@ -254,7 +278,7 @@ impl HTTPRequest {
                     Err(_) => todo!(),
                 };
 
-                let path = String::from(split[1]);
+                let path = PathBuf::from(split[1]);
 
                 let version = match get_http_version_from_string(split[2]) {
                     Ok(v) => v,
@@ -290,7 +314,7 @@ impl HTTPRequest {
 pub struct HTTPResponse {
     status: HTTPStatusCode,
     version: String,
-    contents: String,
+    contents: Option<String>,
 }
 
 impl HTTPResponse {
@@ -300,7 +324,10 @@ impl HTTPResponse {
         let status_message = &self.status;
         let status_line = format!("{version} {status_code} {status_message}");
 
-        let contents = &self.contents;
+        let contents = match &self.contents {
+            Some(c) => String::from(c),
+            None => String::from(""),
+        };
         let length = contents.len();
 
         let res_string = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
