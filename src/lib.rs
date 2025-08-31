@@ -1,7 +1,7 @@
 use core::str;
 use std::{
     collections::HashMap,
-    fmt, fs,
+    env, fmt, fs,
     io::{BufRead, BufReader},
     net::TcpStream,
     path::PathBuf,
@@ -310,28 +310,37 @@ pub struct HTTPRequest {
     // body: Option<String>,
 }
 
+const DEFAULT_ROOT_FOLDER: &str = "public";
+
 impl HTTPRequest {
     pub fn get_file(&self) -> Result<String, HTTPStatusCode> {
         let mut path = PathBuf::from(match self.path.to_str() {
             Some(str) => match str {
                 "/" => match HTTPRequest::get_index_file_name() {
                     Ok(p) => p,
-                    Err(_) => todo!(),
+                    Err(_) => String::from(""),
                 },
                 path_str => String::from(path_str),
             },
             None => todo!(),
         });
 
+        // todo! more prefix stripping
         if path.starts_with("/") {
             path = path.strip_prefix("/").unwrap().to_path_buf();
         }
 
-        if !path.exists() || !path.is_file() {
+        let mut root_path = HTTPRequest::get_root_dir();
+
+        root_path.push(path);
+
+        println!("{}", root_path.display());
+
+        if !root_path.exists() || !root_path.is_file() {
             return Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound));
         }
 
-        match fs::read_to_string(path) {
+        match fs::read_to_string(root_path) {
             Ok(str) => Ok(str),
             Err(_) => Err(HTTPStatusCode::ServerError(
                 ServerErrorCode::InternalServerError,
@@ -339,17 +348,21 @@ impl HTTPRequest {
         }
 
         // todo!("path checking and sanitization");
+        // todo! root folder
     }
 
     fn get_index_file_name() -> Result<String, HTTPStatusCode> {
-        let extensions = [".html", ".php", ".css"];
+        let extensions = [".html"];
+        let root_path = HTTPRequest::get_root_dir();
 
         let mut res: Option<String> = None;
 
         for ext in extensions {
             let test_path = PathBuf::from(format!("{}{}", "index", ext));
+            let mut test_root = root_path.clone();
+            test_root.push(test_path.clone());
 
-            if test_path.exists() {
+            if test_root.exists() {
                 res = Some(String::from(test_path.to_str().unwrap()));
                 break;
             }
@@ -359,6 +372,13 @@ impl HTTPRequest {
             Some(r) => Ok(r),
             None => Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound)),
         }
+    }
+
+    fn get_root_dir() -> PathBuf {
+        PathBuf::from(match env::var("ROOT") {
+            Ok(value) => value,
+            Err(_) => String::from(DEFAULT_ROOT_FOLDER),
+        })
     }
 
     pub fn from_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
