@@ -312,15 +312,22 @@ pub struct HTTPRequest {
 
 impl HTTPRequest {
     pub fn get_file(&self) -> Result<String, HTTPStatusCode> {
-        let path = PathBuf::from(match self.path.to_str() {
+        let mut path = PathBuf::from(match self.path.to_str() {
             Some(str) => match str {
-                "/" => "index.html",
-                path_str => path_str,
+                "/" => match HTTPRequest::get_index_file_name() {
+                    Ok(p) => p,
+                    Err(_) => todo!(),
+                },
+                path_str => String::from(path_str),
             },
             None => todo!(),
         });
 
-        if !path.exists() {
+        if path.starts_with("/") {
+            path = path.strip_prefix("/").unwrap().to_path_buf();
+        }
+
+        if !path.exists() || !path.is_file() {
             return Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound));
         }
 
@@ -332,6 +339,26 @@ impl HTTPRequest {
         }
 
         // todo!("path checking and sanitization");
+    }
+
+    fn get_index_file_name() -> Result<String, HTTPStatusCode> {
+        let extensions = [".html", ".php", ".css"];
+
+        let mut res: Option<String> = None;
+
+        for ext in extensions {
+            let test_path = PathBuf::from(format!("{}{}", "index", ext));
+
+            if test_path.exists() {
+                res = Some(String::from(test_path.to_str().unwrap()));
+                break;
+            }
+        }
+
+        match res {
+            Some(r) => Ok(r),
+            None => Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound)),
+        }
     }
 
     pub fn from_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
