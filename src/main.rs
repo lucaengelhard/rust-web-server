@@ -1,9 +1,6 @@
 use std::{
-    collections::HashMap,
-    fmt, fs,
     io::{BufReader, prelude::*},
     net::{TcpListener, TcpStream},
-    path::Path,
 };
 
 use rust_web_server::{HTTPRequest, HTTPResponse, HTTPStatusCode};
