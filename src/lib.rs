@@ -36,6 +36,22 @@ impl HTTPMethod {
     }
 }
 
+impl fmt::Display for HTTPMethod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            HTTPMethod::GET => write!(f, "GET"),
+            HTTPMethod::HEAD => write!(f, "HEAD"),
+            HTTPMethod::POST => write!(f, "POST"),
+            HTTPMethod::PUT => write!(f, "PUT"),
+            HTTPMethod::DELETE => write!(f, "DELETE"),
+            HTTPMethod::CONNECT => write!(f, "CONNECT"),
+            HTTPMethod::OPTIONS => write!(f, "OPTIONS"),
+            HTTPMethod::TRACE => write!(f, "TRACE"),
+            HTTPMethod::PATCH => write!(f, "PATCH"),
+        }
+    }
+}
+
 pub enum HTTPStatusCode {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
     Informal(InformalCode),
@@ -258,9 +274,9 @@ impl HTTPRequest {
                 let value = split.1.trim();
 
                 match request {
-                    Some(r) => r.headers.insert(key, value),
+                    Some(ref mut r) => r.headers.insert(String::from(key), String::from(value)),
                     None => return Err(()),
-                }
+                };
             }
         }
 
@@ -268,36 +284,6 @@ impl HTTPRequest {
             Some(r) => Ok(r),
             None => Err(()),
         }
-    }
-
-    fn new(target: &str, method: Option<HTTPMethod>, version: Option<String>) -> HTTPRequest {
-        let version = match version {
-            Some(v) => v,
-            None => String::from("HTTP/1.1"),
-        };
-
-        let method = match method {
-            Some(m) => m,
-            None => HTTPMethod::GET,
-        };
-
-        let parsed_url = Url::parse(target).expect("Failed to parse URL");
-
-        let host = parsed_url.host_str().unwrap();
-        let path = parsed_url.path();
-        // let query = parsed_url.query().unwrap();
-
-        let mut req = HTTPRequest {
-            version,
-            method,
-            path: String::from(path),
-            headers: HashMap::new(),
-            // body: Some(String::from(query)),
-        };
-
-        req.headers.insert(String::from("Host"), String::from(host));
-
-        return req;
     }
 }
 
