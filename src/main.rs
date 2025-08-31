@@ -6,9 +6,12 @@ use std::{
 use rust_web_server::{HTTPRequest, HTTPResponse, HTTPStatusCode};
 
 fn main() {
-    let listener = match TcpListener::bind("127.0.0.1::7878") {
+    let listener = match TcpListener::bind("127.0.0.1:7878") {
         Ok(listener) => listener,
-        Err(_e) => panic!(),
+        Err(e) => {
+            print!("{}", e);
+            return;
+        }
     };
 
     for stream in listener.incoming() {
