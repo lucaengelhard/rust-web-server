@@ -137,7 +137,9 @@ impl HTTPRequest {
         })
     }
 
-    pub fn from_buf_reader(buf_reader: BufReader<&TcpStream>) -> Result<HTTPRequest, ()> {
+    pub fn from_buf_reader(
+        buf_reader: BufReader<&TcpStream>,
+    ) -> Result<HTTPRequest, HTTPStatusCode> {
         let lines = buf_reader.lines();
 
         let mut request: Option<HTTPRequest> = None;
@@ -153,7 +155,9 @@ impl HTTPRequest {
                 let split: Vec<&str> = line_str.split_whitespace().collect();
 
                 if split.len() != 3 {
-                    return Err(());
+                    return Err(HTTPStatusCode::ServerError(
+                        ServerErrorCode::InternalServerError,
+                    ));
                 }
 
                 let method = match HTTPMethod::from_str(split[0]) {
@@ -182,7 +186,11 @@ impl HTTPRequest {
 
                 match request {
                     Some(ref mut r) => r.headers.insert(String::from(key), String::from(value)),
-                    None => return Err(()),
+                    None => {
+                        return Err(HTTPStatusCode::ServerError(
+                            ServerErrorCode::InternalServerError,
+                        ));
+                    }
                 };
             }
         }
