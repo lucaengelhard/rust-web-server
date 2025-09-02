@@ -4,7 +4,7 @@ use std::{
 };
 
 use rust_web_server::{
-    HTTPRequest, HTTPResponse,
+    HTTPRequest, HTTPResponse, RequestURL,
     status::{HTTPStatusCode, ServerErrorCode, SuccessCode},
 };
 
@@ -39,7 +39,8 @@ fn handle_connection(mut stream: TcpStream) {
     };
 
     let response = match request.version.as_str() {
-        "1.1" => match request.get_file() {
+        "1.1" => match HTTPRequest::get_file(RequestURL::normalize(request.path.to_str().unwrap()))
+        {
             Ok(file_str) => HTTPResponse {
                 status: HTTPStatusCode::Success(SuccessCode::OK),
                 version: String::from("1.1"),

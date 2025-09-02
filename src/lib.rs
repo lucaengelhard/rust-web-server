@@ -1,5 +1,7 @@
 pub mod status;
 
+use urlencoding::decode;
+
 use std::{
     collections::HashMap,
     env, fmt, fs,
@@ -68,33 +70,67 @@ pub struct HTTPRequest {
 
 const DEFAULT_ROOT_FOLDER: &str = "public";
 
-impl HTTPRequest {
-    pub fn get_file(&self) -> Result<String, HTTPStatusCode> {
-        let mut path = PathBuf::from(match self.path.to_str() {
-            Some(str) => match str {
-                "/" => match HTTPRequest::get_index_file_name() {
-                    Ok(p) => p,
-                    Err(_) => String::from(""),
-                },
-                path_str => String::from(path_str),
-            },
-            None => todo!(),
-        });
+pub struct RequestURL {
+    path: PathBuf,
+    parameters: Option<Vec<(String, String)>>,
+}
 
-        // todo! more prefix stripping
-        if path.starts_with("/") {
-            path = path.strip_prefix("/").unwrap().to_path_buf();
+impl RequestURL {
+    pub fn normalize(input: &str) -> RequestURL {
+        // -> Uri Decoding
+        let decoded = match decode(input) {
+            Ok(d) => d.into_owned(),
+            Err(_) => todo!(),
+        };
+
+        // -> Sanitize relative dots
+        let mut valid_parts: Vec<String> = Vec::new();
+        let split = decoded.split("/");
+
+        for chunk in split {
+            match chunk {
+                "" => (),
+                "." => (),
+                ".." => {
+                    valid_parts.pop();
+                }
+                _ => valid_parts.push(String::from(chunk)),
+            }
         }
 
-        let mut root_path = HTTPRequest::get_root_dir();
+        let valid_string = valid_parts.join("/");
 
-        root_path.push(path);
+        let path = PathBuf::from(valid_string);
+
+        // -> only absolute paths
+        let _ = path.strip_prefix(".");
+
+        // -> trim root slash
+        let _ = path.strip_prefix("/");
+
+        // -> Cut off at first ? (parameters)
+        let parameters: Option<Vec<(String, String)>> = None;
+
+        RequestURL { path, parameters }
+    }
+}
+
+impl HTTPRequest {
+    pub fn get_file(input_url: RequestURL) -> Result<String, HTTPStatusCode> {
+        let mut root_path = HTTPRequest::get_root_dir();
+        root_path.push(input_url.path);
 
         println!("{}", root_path.display());
 
-        if !root_path.exists() || !root_path.is_file() {
+        if !root_path.exists() {
             return Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound));
         }
+
+        if root_path.is_dir() {
+            root_path.push(PathBuf::from("index.html"));
+        }
+
+        println!("{}", root_path.display());
 
         match fs::read_to_string(root_path) {
             Ok(str) => Ok(str),
@@ -102,9 +138,6 @@ impl HTTPRequest {
                 ServerErrorCode::InternalServerError,
             )),
         }
-
-        // todo!("path checking and sanitization");
-        // todo! root folder
     }
 
     fn get_index_file_name() -> Result<String, HTTPStatusCode> {
@@ -197,7 +230,9 @@ impl HTTPRequest {
 
         match request {
             Some(r) => Ok(r),
-            None => Err(()),
+            None => Err(HTTPStatusCode::ServerError(
+                ServerErrorCode::InternalServerError,
+            )),
         }
     }
 }
@@ -225,6 +260,8 @@ impl HTTPResponse {
         let res_string = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
 
         res_string
+
+        // TODO: Content-Type Header (from file type?)
     }
 }
 

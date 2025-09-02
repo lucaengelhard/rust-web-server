@@ -153,7 +153,7 @@ impl HTTPStatusCode {
                 ClientErrorCode::UnavailableForLegalReasons => todo!(),
             },
             HTTPStatusCode::ServerError(code) => match code {
-                ServerErrorCode::InternalServerError => todo!(),
+                ServerErrorCode::InternalServerError => 500,
                 ServerErrorCode::NotImplemented => todo!(),
                 ServerErrorCode::BadGateway => todo!(),
                 ServerErrorCode::ServiceUnavailable => todo!(),
@@ -231,7 +231,7 @@ impl fmt::Display for HTTPStatusCode {
                 ClientErrorCode::UnavailableForLegalReasons => todo!(),
             },
             HTTPStatusCode::ServerError(code) => match code {
-                ServerErrorCode::InternalServerError => todo!(),
+                ServerErrorCode::InternalServerError => write!(f, "Internal Server Error"),
                 ServerErrorCode::NotImplemented => todo!(),
                 ServerErrorCode::BadGateway => todo!(),
                 ServerErrorCode::ServiceUnavailable => todo!(),
