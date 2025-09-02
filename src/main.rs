@@ -3,7 +3,10 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-use rust_web_server::{HTTPRequest, HTTPResponse, HTTPStatusCode};
+use rust_web_server::{
+    HTTPRequest, HTTPResponse,
+    status::{HTTPStatusCode, ServerErrorCode, SuccessCode},
+};
 
 fn main() {
     let listener = match TcpListener::bind("127.0.0.1:7878") {
@@ -38,7 +41,7 @@ fn handle_connection(mut stream: TcpStream) {
     let response = match request.version.as_str() {
         "1.1" => match request.get_file() {
             Ok(file_str) => HTTPResponse {
-                status: HTTPStatusCode::Success(rust_web_server::SuccessCode::OK),
+                status: HTTPStatusCode::Success(SuccessCode::OK),
                 version: String::from("1.1"),
                 contents: Some(file_str),
             },
@@ -50,9 +53,7 @@ fn handle_connection(mut stream: TcpStream) {
         },
 
         &_ => HTTPResponse {
-            status: HTTPStatusCode::ServerError(
-                rust_web_server::ServerErrorCode::HTTPVersionNotSupported,
-            ),
+            status: HTTPStatusCode::ServerError(ServerErrorCode::HTTPVersionNotSupported),
             version: String::from("1.1"),
             contents: None,
         },
