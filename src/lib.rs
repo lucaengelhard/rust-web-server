@@ -1,3 +1,4 @@
+pub mod defaults;
 pub mod status;
 
 use urlencoding::decode;
@@ -10,7 +11,10 @@ use std::{
     path::{MAIN_SEPARATOR_STR, PathBuf},
 };
 
-use crate::status::{ClientErrorCode, HTTPStatusCode, ServerErrorCode};
+use crate::{
+    defaults::{INDEX_EXTENSIONS, LOGGING, ROOT_FOLDER},
+    status::{ClientErrorCode, HTTPStatusCode, ServerErrorCode},
+};
 
 #[derive(Debug)]
 pub enum HTTPMethod {
@@ -96,6 +100,7 @@ impl RequestURL {
 
         // -> trim root slash
         let _ = path.strip_prefix("/");
+        let _ = path.strip_prefix(MAIN_SEPARATOR_STR);
 
         // -> Cut off at first ? (parameters)
         let parameters: Option<Vec<(String, String)>> = None;
@@ -113,17 +118,16 @@ pub struct HTTPRequest {
     // body: Option<String>,
 }
 
-const DEFAULT_ROOT_FOLDER: &str = "public";
-const INDEX_EXTENSIONS: [&str; 2] = [".php", ".html"];
-
 impl HTTPRequest {
     pub fn get_file(input_url: RequestURL) -> Result<String, HTTPStatusCode> {
         let mut root_path = HTTPRequest::get_root_dir();
         root_path.push(input_url.path);
 
-        println!("{}", root_path.display());
-
         if !root_path.exists() {
+            log(format!(
+                "File or Directory \"{}\" doesn't exist",
+                root_path.display()
+            ));
             return Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound));
         }
 
@@ -134,7 +138,7 @@ impl HTTPRequest {
             }
         }
 
-        println!("{}", root_path.display());
+        log(format!("Getting file: {}", root_path.display()));
 
         match fs::read_to_string(root_path) {
             Ok(str) => Ok(str),
@@ -167,7 +171,7 @@ impl HTTPRequest {
     fn get_root_dir() -> PathBuf {
         PathBuf::from(match env::var("ROOT") {
             Ok(value) => value,
-            Err(_) => String::from(DEFAULT_ROOT_FOLDER),
+            Err(_) => String::from(ROOT_FOLDER),
         })
     }
 
@@ -274,4 +278,23 @@ fn get_http_version_from_string(input: &str) -> Result<String, ()> {
     }
 
     Ok(input.replace(prefix, ""))
+}
+
+fn log(m: String) {
+    let active: bool = match env::var("logging") {
+        Ok(value) => bool_from_string(value),
+        Err(_) => LOGGING,
+    };
+
+    if active {
+        // Todo: Log file
+        println!("{}", m);
+    }
+}
+
+fn bool_from_string(input: String) -> bool {
+    match input.parse::<bool>() {
+        Ok(v) => v,
+        Err(_) => false,
+    }
 }

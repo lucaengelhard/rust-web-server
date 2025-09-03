@@ -1,3 +1,5 @@
+use dotenv::dotenv;
+
 use std::{
     io::{BufReader, prelude::*},
     net::{TcpListener, TcpStream},
@@ -9,6 +11,9 @@ use rust_web_server::{
 };
 
 fn main() {
+    // Setup
+    dotenv().ok();
+
     let listener = match TcpListener::bind("127.0.0.1:7878") {
         Ok(listener) => listener,
         Err(e) => {
@@ -33,10 +38,21 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&stream);
 
-    let request = match HTTPRequest::from_buf_reader(buf_reader) {
-        Ok(r) => r,
-        Err(_) => todo!(),
-    };
+    let request_res = HTTPRequest::from_buf_reader(buf_reader);
+
+    if request_res.is_err() {
+        let response = HTTPResponse {
+            status: request_res.unwrap_err(),
+            version: String::from("1.1"),
+            contents: None,
+        };
+
+        stream.write_all(response.to_string().as_bytes()).unwrap();
+
+        return;
+    }
+
+    let request = request_res.unwrap();
 
     let response = match request.version.as_str() {
         "1.1" => match HTTPRequest::get_file(RequestURL::normalize(request.path.to_str().unwrap()))
