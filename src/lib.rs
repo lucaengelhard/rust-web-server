@@ -7,7 +7,7 @@ use std::{
     env, fmt, fs,
     io::{BufRead, BufReader},
     net::TcpStream,
-    path::PathBuf,
+    path::{MAIN_SEPARATOR_STR, PathBuf},
 };
 
 use crate::status::{ClientErrorCode, HTTPStatusCode, ServerErrorCode};
@@ -59,17 +59,6 @@ impl fmt::Display for HTTPMethod {
     }
 }
 
-#[derive(Debug)]
-pub struct HTTPRequest {
-    pub method: HTTPMethod,
-    pub path: PathBuf,
-    pub version: String,
-    pub headers: HashMap<String, String>,
-    // body: Option<String>,
-}
-
-const DEFAULT_ROOT_FOLDER: &str = "public";
-
 pub struct RequestURL {
     path: PathBuf,
     parameters: Option<Vec<(String, String)>>,
@@ -98,7 +87,7 @@ impl RequestURL {
             }
         }
 
-        let valid_string = valid_parts.join("/");
+        let valid_string = valid_parts.join(MAIN_SEPARATOR_STR);
 
         let path = PathBuf::from(valid_string);
 
@@ -115,6 +104,18 @@ impl RequestURL {
     }
 }
 
+#[derive(Debug)]
+pub struct HTTPRequest {
+    pub method: HTTPMethod,
+    pub path: PathBuf,
+    pub version: String,
+    pub headers: HashMap<String, String>,
+    // body: Option<String>,
+}
+
+const DEFAULT_ROOT_FOLDER: &str = "public";
+const INDEX_EXTENSIONS: [&str; 1] = [".html"];
+
 impl HTTPRequest {
     pub fn get_file(input_url: RequestURL) -> Result<String, HTTPStatusCode> {
         let mut root_path = HTTPRequest::get_root_dir();
@@ -127,7 +128,10 @@ impl HTTPRequest {
         }
 
         if root_path.is_dir() {
-            root_path.push(PathBuf::from("index.html"));
+            match HTTPRequest::get_index_path(root_path) {
+                Ok(p) => root_path = p,
+                Err(c) => return Err(c),
+            }
         }
 
         println!("{}", root_path.display());
@@ -140,19 +144,16 @@ impl HTTPRequest {
         }
     }
 
-    fn get_index_file_name() -> Result<String, HTTPStatusCode> {
-        let extensions = [".html"];
-        let root_path = HTTPRequest::get_root_dir();
+    fn get_index_path(path: PathBuf) -> Result<PathBuf, HTTPStatusCode> {
+        let mut res: Option<PathBuf> = None;
 
-        let mut res: Option<String> = None;
+        for ext in INDEX_EXTENSIONS {
+            let test_file_name = format!("{}{}", "index", ext);
+            let mut test_path = path.clone();
+            test_path.push(test_file_name);
 
-        for ext in extensions {
-            let test_path = PathBuf::from(format!("{}{}", "index", ext));
-            let mut test_root = root_path.clone();
-            test_root.push(test_path.clone());
-
-            if test_root.exists() {
-                res = Some(String::from(test_path.to_str().unwrap()));
+            if test_path.exists() {
+                res = Some(test_path);
                 break;
             }
         }
@@ -162,6 +163,29 @@ impl HTTPRequest {
             None => Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound)),
         }
     }
+
+    // fn get_index_file_name() -> Result<String, HTTPStatusCode> {
+    //     let extensions = [".html"];
+    //     let root_path = HTTPRequest::get_root_dir();
+
+    //     let mut res: Option<String> = None;
+
+    //     for ext in extensions {
+    //         let test_path = PathBuf::from(format!("{}{}", "index", ext));
+    //         let mut test_root = root_path.clone();
+    //         test_root.push(test_path.clone());
+
+    //         if test_root.exists() {
+    //             res = Some(String::from(test_path.to_str().unwrap()));
+    //             break;
+    //         }
+    //     }
+
+    //     match res {
+    //         Some(r) => Ok(r),
+    //         None => Err(HTTPStatusCode::ClientError(ClientErrorCode::NotFound)),
+    //     }
+    // }
 
     fn get_root_dir() -> PathBuf {
         PathBuf::from(match env::var("ROOT") {
